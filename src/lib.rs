@@ -125,7 +125,6 @@ use std::future::Future;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use std::thread;
 
 use futures_core::ready;
 use once_cell::sync::Lazy;
@@ -422,23 +421,9 @@ impl<T: futures_io::AsyncSeek> tokio::io::AsyncSeek for Compat<T> {
     }
 }
 
-static TOKIO1: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
-    thread::Builder::new()
-        .name("async-compat/tokio-1".to_string())
-        .spawn(move || TOKIO1.block_on(Pending))
-        .unwrap();
-    tokio::runtime::Builder::new_current_thread()
+pub static TOKIO1: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
+    tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .expect("cannot start tokio-1 runtime")
 });
-
-struct Pending;
-
-impl Future for Pending {
-    type Output = ();
-
-    fn poll(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
-        Poll::Pending
-    }
-}
