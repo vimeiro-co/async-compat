@@ -453,6 +453,7 @@ impl<T: futures_io::AsyncSeek> tokio::io::AsyncSeek for Compat<T> {
 
 pub static TOKIO1: Lazy<tokio::runtime::Runtime> = Lazy::new(|| {
     tokio::runtime::Builder::new_multi_thread()
+	.worker_threads(4)
         .enable_all()
         .build()
         .expect("cannot start tokio-1 runtime")
